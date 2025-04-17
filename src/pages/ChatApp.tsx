@@ -8,6 +8,8 @@ import { SideNav } from "@/components/chat/SideNav";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { SettingsMenu } from "@/components/chat/SettingsMenu";
+import { UserProfile } from "@/components/chat/UserProfile";
+import { NotificationsView } from "@/components/chat/NotificationsView";
 
 type User = {
   username: string;
@@ -169,19 +171,21 @@ const ChatApp = () => {
               currentUser={currentUser} 
             />
           )}
-          {activeTab === "settings" && currentUser && (
-            <SettingsMenu
-              currentUser={currentUser}
-              onUpdateDisplayName={handleUpdateDisplayName}
-            />
+          {activeTab === "notifications" && currentUser && (
+            <NotificationsView currentUser={currentUser} />
           )}
         </div>
         
         <div className="flex-1 overflow-hidden">
-          {currentUser && (
+          {selectedChat ? (
             <ChatView 
               selectedChat={selectedChat} 
               currentUser={currentUser} 
+            />
+          ) : (
+            currentUser && <UserProfile 
+              username={currentUser.username} 
+              currentUser={true} 
             />
           )}
         </div>

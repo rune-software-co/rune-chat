@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Image, PaperclipIcon, Send, Smile, User, Users, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,6 +12,8 @@ type Message = {
   timestamp: string;
   isCurrentUser?: boolean;
   imageUrl?: string;
+  receiverId?: string;
+  groupId?: string;
 };
 
 type ChatViewProps = {
@@ -27,7 +28,6 @@ export const ChatView = ({ selectedChat, currentUser }: ChatViewProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load messages from localStorage when selectedChat changes
   useEffect(() => {
     if (selectedChat) {
       loadMessages();
@@ -36,7 +36,6 @@ export const ChatView = ({ selectedChat, currentUser }: ChatViewProps) => {
     }
   }, [selectedChat, currentUser.username]);
 
-  // Scroll to bottom of messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -49,7 +48,6 @@ export const ChatView = ({ selectedChat, currentUser }: ChatViewProps) => {
     if (selectedChat.type === "friend") {
       const allMessages = JSON.parse(localStorage.getItem("chatAppMessages") || "[]");
       
-      // For direct messages, find messages between current user and friend
       chatMessages = allMessages.filter((msg: Message) => {
         const participants = [currentUser.username, selectedChat.id];
         return (
@@ -58,18 +56,15 @@ export const ChatView = ({ selectedChat, currentUser }: ChatViewProps) => {
         );
       });
     } else {
-      // For group messages, find messages for this group
       const groupMessages = JSON.parse(localStorage.getItem("chatAppGroupMessages") || "[]");
       chatMessages = groupMessages.filter((msg: Message) => msg.groupId === selectedChat.id);
     }
     
-    // Add isCurrentUser flag for UI rendering
     const processedMessages = chatMessages.map((msg: Message) => ({
       ...msg,
       isCurrentUser: msg.sender === currentUser.username
     }));
     
-    // Sort by timestamp
     processedMessages.sort((a: Message, b: Message) => {
       return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
     });
@@ -92,7 +87,6 @@ export const ChatView = ({ selectedChat, currentUser }: ChatViewProps) => {
     };
     
     if (selectedChat.type === "friend") {
-      // For direct messages
       const directMessage = {
         ...newMsg,
         receiverId: selectedChat.id
@@ -102,7 +96,6 @@ export const ChatView = ({ selectedChat, currentUser }: ChatViewProps) => {
       allMessages.push(directMessage);
       localStorage.setItem("chatAppMessages", JSON.stringify(allMessages));
     } else {
-      // For group messages
       const groupMessage = {
         ...newMsg,
         groupId: selectedChat.id
@@ -112,7 +105,6 @@ export const ChatView = ({ selectedChat, currentUser }: ChatViewProps) => {
       groupMessages.push(groupMessage);
       localStorage.setItem("chatAppGroupMessages", JSON.stringify(groupMessages));
       
-      // Update the group's last message
       const groups = JSON.parse(localStorage.getItem("chatAppGroups") || "[]");
       const updatedGroups = groups.map((group: any) => {
         if (group.id === selectedChat.id) {
@@ -130,7 +122,6 @@ export const ChatView = ({ selectedChat, currentUser }: ChatViewProps) => {
       localStorage.setItem("chatAppGroups", JSON.stringify(updatedGroups));
     }
     
-    // Add to UI with isCurrentUser flag
     const uiMessage = {
       ...newMsg,
       isCurrentUser: true
@@ -151,7 +142,6 @@ export const ChatView = ({ selectedChat, currentUser }: ChatViewProps) => {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Create a preview URL
       const reader = new FileReader();
       reader.onload = (e) => {
         if (e.target?.result) {
@@ -169,11 +159,11 @@ export const ChatView = ({ selectedChat, currentUser }: ChatViewProps) => {
     yesterday.setDate(yesterday.getDate() - 1);
     
     if (date.toDateString() === now.toDateString()) {
-      return format(date, "h:mm a"); // Today
+      return format(date, "h:mm a");
     } else if (date.toDateString() === yesterday.toDateString()) {
-      return "Yesterday " + format(date, "h:mm a"); // Yesterday
+      return "Yesterday " + format(date, "h:mm a");
     } else {
-      return format(date, "MMM d, h:mm a"); // Other days
+      return format(date, "MMM d, h:mm a");
     }
   };
 

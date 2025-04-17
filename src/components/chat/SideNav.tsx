@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { MessageSquare, UserRound, Settings } from "lucide-react";
+import { MessageSquare, Users, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type SideNavProps = {
@@ -9,7 +9,9 @@ type SideNavProps = {
   onLogout: () => void;
 };
 
-export const SideNav = ({ activeTab, onChangeTab, onLogout }: SideNavProps) => {
+export const SideNav = ({ activeTab, onChangeTab }: SideNavProps) => {
+  const [unreadNotifications] = useState(true); // You can make this dynamic based on actual notifications
+
   return (
     <div className="w-16 bg-gray-950 border-r border-gray-800 flex flex-col items-center py-4">
       <div className="mb-8">
@@ -41,21 +43,25 @@ export const SideNav = ({ activeTab, onChangeTab, onLogout }: SideNavProps) => {
             : "text-gray-500 hover:text-white hover:bg-gray-800"
           }
         >
-          <UserRound size={20} />
+          <Users size={20} />
           <span className="sr-only">Friends</span>
         </Button>
         
         <Button
-          variant={activeTab === "settings" ? "default" : "ghost"}
+          variant={activeTab === "notifications" ? "default" : "ghost"}
           size="icon"
-          onClick={() => onChangeTab("settings")}
-          className={activeTab === "settings" 
-            ? "bg-purple-600 hover:bg-purple-700 text-white" 
-            : "text-gray-500 hover:text-white hover:bg-gray-800"
-          }
+          onClick={() => onChangeTab("notifications")}
+          className={`relative ${
+            activeTab === "notifications" 
+              ? "bg-purple-600 hover:bg-purple-700 text-white" 
+              : "text-gray-500 hover:text-white hover:bg-gray-800"
+          }`}
         >
-          <Settings size={20} />
-          <span className="sr-only">Settings</span>
+          <Bell size={20} />
+          {unreadNotifications && (
+            <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full" />
+          )}
+          <span className="sr-only">Notifications</span>
         </Button>
       </div>
     </div>
