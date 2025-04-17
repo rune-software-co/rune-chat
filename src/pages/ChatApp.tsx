@@ -6,6 +6,8 @@ import { GroupsList } from "@/components/chat/GroupsList";
 import { ChatView } from "@/components/chat/ChatView";
 import { AuthModal } from "@/components/chat/AuthModal";
 import { SideNav } from "@/components/chat/SideNav";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 type User = {
   username: string;
@@ -19,10 +21,28 @@ type Chat = {
 };
 
 const ChatApp = () => {
+  const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState("friends");
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
+  const [userFriends, setUserFriends] = useState<any[]>([]);
+
+  // Initialize local storage structures if they don't exist
+  useEffect(() => {
+    if (!localStorage.getItem("chatAppUsers")) {
+      localStorage.setItem("chatAppUsers", JSON.stringify([]));
+    }
+    if (!localStorage.getItem("chatAppMessages")) {
+      localStorage.setItem("chatAppMessages", JSON.stringify([]));
+    }
+    if (!localStorage.getItem("chatAppGroups")) {
+      localStorage.setItem("chatAppGroups", JSON.stringify([]));
+    }
+    if (!localStorage.getItem("chatAppGroupMessages")) {
+      localStorage.setItem("chatAppGroupMessages", JSON.stringify([]));
+    }
+  }, []);
 
   // Check if user is already authenticated (e.g., from localStorage)
   useEffect(() => {
@@ -39,10 +59,45 @@ const ChatApp = () => {
     }
   }, []);
 
+  // Load user's friends when currentUser changes
+  useEffect(() => {
+    if (currentUser) {
+      loadUserFriends();
+    }
+  }, [currentUser, activeTab]);
+
+  const loadUserFriends = () => {
+    if (!currentUser) return;
+    
+    const users = JSON.parse(localStorage.getItem("chatAppUsers") || "[]");
+    const currentUserData = users.find((u: any) => u.username === currentUser.username);
+    
+    if (currentUserData) {
+      const friendsList = currentUserData.friends || [];
+      const friendsData = friendsList.map((friendUsername: string) => {
+        const friend = users.find((u: any) => u.username === friendUsername);
+        if (friend) {
+          return {
+            id: friend.username,
+            username: friend.username,
+            name: friend.displayName,
+            avatar: null,
+            status: Math.random() > 0.5 ? "online" : "offline", // Simulate random status
+            lastSeen: "Recently"
+          };
+        }
+        return null;
+      }).filter(Boolean);
+      
+      setUserFriends(friendsData);
+    }
+  };
+
   const handleAuthenticate = (user: User) => {
     setCurrentUser(user);
     setIsAuthenticated(true);
     localStorage.setItem("chatAppUser", JSON.stringify(user));
+    toast.success(`Welcome, ${user.displayName}!`);
   };
 
   const handleLogout = () => {
@@ -50,11 +105,12 @@ const ChatApp = () => {
     setIsAuthenticated(false);
     localStorage.removeItem("chatAppUser");
     setSelectedChat(null);
+    toast.success("You have been logged out");
   };
 
   const handleSelectFriend = (friend: any) => {
     setSelectedChat({
-      id: friend.id,
+      id: friend.username,
       name: friend.name,
       type: "friend"
     });
@@ -68,35 +124,56 @@ const ChatApp = () => {
     });
   };
 
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    // Reset selected chat when switching tabs
+    setSelectedChat(null);
+  };
+
   if (!isAuthenticated) {
     return <AuthModal onAuthenticate={handleAuthenticate} />;
   }
 
   return (
     <div className="h-screen flex flex-col bg-gray-900">
-      <Navbar />
+      <Navbar currentUser={currentUser} onLogout={handleLogout} />
       
       <div className="flex-1 flex overflow-hidden">
         <SideNav
           activeTab={activeTab}
-          onChangeTab={setActiveTab}
+          onChangeTab={handleTabChange}
           onLogout={handleLogout}
         />
         
         <div className="w-64 border-r border-gray-800 overflow-hidden">
-          {activeTab === "friends" && (
-            <FriendsList onSelectFriend={handleSelectFriend} />
+          {activeTab === "friends" && currentUser && (
+            <FriendsList 
+              onSelectFriend={handleSelectFriend} 
+              currentUser={currentUser} 
+            />
           )}
-          {activeTab === "groups" && (
-            <GroupsList onSelectGroup={handleSelectGroup} />
+          {activeTab === "groups" && currentUser && (
+            <GroupsList 
+              onSelectGroup={handleSelectGroup} 
+              currentUser={currentUser}
+              friends={userFriends} 
+            />
           )}
-          {activeTab === "direct" && (
-            <FriendsList onSelectFriend={handleSelectFriend} />
+          {activeTab === "direct" && currentUser && (
+            <FriendsList 
+              onSelectFriend={handleSelectFriend} 
+              currentUser={currentUser} 
+            />
           )}
         </div>
         
         <div className="flex-1 overflow-hidden">
-          <ChatView selectedChat={selectedChat} />
+          {currentUser && (
+            <ChatView 
+              selectedChat={selectedChat} 
+              currentUser={currentUser} 
+            />
+          )}
         </div>
       </div>
     </div>

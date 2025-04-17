@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Eye, EyeOff, User, Key } from "lucide-react";
+import { Eye, EyeOff, User, Key, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Captcha } from "./Captcha";
+import { toast } from "sonner";
 
 type AuthModalProps = {
   onAuthenticate: (user: { username: string; displayName: string }) => void;
@@ -25,17 +27,60 @@ export const AuthModal = ({ onAuthenticate }: AuthModalProps) => {
   const [displayName, setDisplayName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [isCaptchaVerified, setIsCaptchaVerified] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // In a real app, this would be an API call
-    // For this demo, we'll just simulate authentication
+    if (!isCaptchaVerified) {
+      setAuthError("Please complete the captcha verification first");
+      return;
+    }
+    
     if (username && password) {
-      onAuthenticate({ 
-        username,
-        displayName: displayName || username
-      });
+      // In a real app, this would be an API call
+      // Here we'll simulate authentication with localStorage
+      if (isLogin) {
+        // Check if user exists in localStorage
+        const users = JSON.parse(localStorage.getItem("chatAppUsers") || "[]");
+        const user = users.find((u: any) => u.username === username);
+        
+        if (user && user.password === password) {
+          toast.success(`Welcome back, ${user.displayName}!`);
+          onAuthenticate({ 
+            username,
+            displayName: user.displayName
+          });
+        } else {
+          setAuthError("Invalid username or password");
+        }
+      } else {
+        // Register new user
+        const users = JSON.parse(localStorage.getItem("chatAppUsers") || "[]");
+        const userExists = users.some((u: any) => u.username === username);
+        
+        if (userExists) {
+          setAuthError("Username already exists");
+        } else {
+          const newUser = { 
+            username, 
+            password, 
+            displayName: displayName || username,
+            friends: [],
+            friendRequests: []
+          };
+          
+          users.push(newUser);
+          localStorage.setItem("chatAppUsers", JSON.stringify(users));
+          
+          toast.success("Account created successfully!");
+          onAuthenticate({ 
+            username,
+            displayName: newUser.displayName
+          });
+        }
+      }
     }
   };
 
@@ -105,6 +150,12 @@ export const AuthModal = ({ onAuthenticate }: AuthModalProps) => {
               </div>
             </div>
             
+            <Captcha onVerify={setIsCaptchaVerified} />
+            
+            {authError && (
+              <p className="text-sm text-red-400 text-center">{authError}</p>
+            )}
+            
             {isLogin && (
               <div className="flex items-center space-x-2">
                 <Checkbox 
@@ -128,6 +179,7 @@ export const AuthModal = ({ onAuthenticate }: AuthModalProps) => {
             <Button 
               type="submit" 
               className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+              disabled={!isCaptchaVerified}
             >
               {isLogin ? "Sign in" : "Create account"}
             </Button>
@@ -135,7 +187,10 @@ export const AuthModal = ({ onAuthenticate }: AuthModalProps) => {
               {isLogin ? "Don't have an account? " : "Already have an account? "}
               <button
                 type="button"
-                onClick={() => setIsLogin(!isLogin)}
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  setAuthError(null);
+                }}
                 className="text-purple-400 hover:text-purple-300 font-medium"
               >
                 {isLogin ? "Sign up" : "Sign in"}
