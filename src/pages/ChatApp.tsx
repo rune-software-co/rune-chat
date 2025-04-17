@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { FriendsList } from "@/components/chat/FriendsList";
@@ -8,6 +7,7 @@ import { AuthModal } from "@/components/chat/AuthModal";
 import { SideNav } from "@/components/chat/SideNav";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { SettingsMenu } from "@/components/chat/SettingsMenu";
 
 type User = {
   username: string;
@@ -28,7 +28,6 @@ const ChatApp = () => {
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [userFriends, setUserFriends] = useState<any[]>([]);
 
-  // Initialize local storage structures if they don't exist
   useEffect(() => {
     if (!localStorage.getItem("chatAppUsers")) {
       localStorage.setItem("chatAppUsers", JSON.stringify([]));
@@ -44,7 +43,6 @@ const ChatApp = () => {
     }
   }, []);
 
-  // Check if user is already authenticated (e.g., from localStorage)
   useEffect(() => {
     const savedUser = localStorage.getItem("chatAppUser");
     if (savedUser) {
@@ -59,7 +57,6 @@ const ChatApp = () => {
     }
   }, []);
 
-  // Load user's friends when currentUser changes
   useEffect(() => {
     if (currentUser) {
       loadUserFriends();
@@ -82,7 +79,7 @@ const ChatApp = () => {
             username: friend.username,
             name: friend.displayName,
             avatar: null,
-            status: Math.random() > 0.5 ? "online" : "offline", // Simulate random status
+            status: Math.random() > 0.5 ? "online" : "offline",
             lastSeen: "Recently"
           };
         }
@@ -126,8 +123,22 @@ const ChatApp = () => {
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
-    // Reset selected chat when switching tabs
     setSelectedChat(null);
+  };
+
+  const handleUpdateDisplayName = (newDisplayName: string) => {
+    if (!currentUser) return;
+    
+    const users = JSON.parse(localStorage.getItem("chatAppUsers") || "[]");
+    const updatedUsers = users.map((user: any) => {
+      if (user.username === currentUser.username) {
+        return { ...user, displayName: newDisplayName };
+      }
+      return user;
+    });
+    
+    localStorage.setItem("chatAppUsers", JSON.stringify(updatedUsers));
+    setCurrentUser({ ...currentUser, displayName: newDisplayName });
   };
 
   if (!isAuthenticated) {
@@ -146,23 +157,22 @@ const ChatApp = () => {
         />
         
         <div className="w-64 border-r border-gray-800 overflow-hidden">
+          {activeTab === "direct" && currentUser && (
+            <FriendsList 
+              onSelectFriend={handleSelectFriend} 
+              currentUser={currentUser} 
+            />
+          )}
           {activeTab === "friends" && currentUser && (
             <FriendsList 
               onSelectFriend={handleSelectFriend} 
               currentUser={currentUser} 
             />
           )}
-          {activeTab === "groups" && currentUser && (
-            <GroupsList 
-              onSelectGroup={handleSelectGroup} 
+          {activeTab === "settings" && currentUser && (
+            <SettingsMenu
               currentUser={currentUser}
-              friends={userFriends} 
-            />
-          )}
-          {activeTab === "direct" && currentUser && (
-            <FriendsList 
-              onSelectFriend={handleSelectFriend} 
-              currentUser={currentUser} 
+              onUpdateDisplayName={handleUpdateDisplayName}
             />
           )}
         </div>

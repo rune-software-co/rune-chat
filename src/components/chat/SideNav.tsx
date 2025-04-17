@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { MessageSquare, UserRound, UsersRound, Settings, LogOut } from "lucide-react";
+import { MessageSquare, UserRound, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type SideNavProps = {
@@ -46,37 +46,16 @@ export const SideNav = ({ activeTab, onChangeTab, onLogout }: SideNavProps) => {
         </Button>
         
         <Button
-          variant={activeTab === "groups" ? "default" : "ghost"}
+          variant={activeTab === "settings" ? "default" : "ghost"}
           size="icon"
-          onClick={() => onChangeTab("groups")}
-          className={activeTab === "groups" 
+          onClick={() => onChangeTab("settings")}
+          className={activeTab === "settings" 
             ? "bg-purple-600 hover:bg-purple-700 text-white" 
             : "text-gray-500 hover:text-white hover:bg-gray-800"
           }
         >
-          <UsersRound size={20} />
-          <span className="sr-only">Groups</span>
-        </Button>
-      </div>
-      
-      <div className="mt-auto flex flex-col items-center gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-gray-500 hover:text-white hover:bg-gray-800"
-        >
           <Settings size={20} />
           <span className="sr-only">Settings</span>
-        </Button>
-        
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onLogout}
-          className="text-gray-500 hover:text-white hover:bg-gray-800"
-        >
-          <LogOut size={20} />
-          <span className="sr-only">Logout</span>
         </Button>
       </div>
     </div>
