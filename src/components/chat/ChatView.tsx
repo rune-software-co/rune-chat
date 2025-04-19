@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Image, PaperclipIcon, Send, Smile, User, Users, X } from "lucide-react";
+import { Image, PaperclipIcon, Send, Smile, User, Users, X, Settings } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,8 @@ export const ChatView = ({ selectedChat, currentUser }: ChatViewProps) => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showGroupSettings, setShowGroupSettings] = useState(false);
+  const [availableFriends, setAvailableFriends] = useState<any[]>([]);
 
   useEffect(() => {
     if (selectedChat) {
@@ -39,6 +41,25 @@ export const ChatView = ({ selectedChat, currentUser }: ChatViewProps) => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (selectedChat?.type === "group") {
+      const users = JSON.parse(localStorage.getItem("chatAppUsers") || "[]");
+      const currentUserData = users.find((u: any) => u.username === currentUser.username);
+      if (currentUserData?.friends) {
+        const friends = currentUserData.friends
+          .map((friendUsername: string) => {
+            const friend = users.find((u: any) => u.username === friendUsername);
+            return friend ? {
+              username: friend.username,
+              displayName: friend.displayName
+            } : null;
+          })
+          .filter(Boolean);
+        setAvailableFriends(friends);
+      }
+    }
+  }, [selectedChat, currentUser.username]);
 
   const loadMessages = () => {
     if (!selectedChat) return;
@@ -175,6 +196,53 @@ export const ChatView = ({ selectedChat, currentUser }: ChatViewProps) => {
     return user ? user.displayName : username;
   };
 
+  const isGroupCreator = () => {
+    if (!selectedChat || selectedChat.type !== "group") return false;
+    const groups = JSON.parse(localStorage.getItem("chatAppGroups") || "[]");
+    const group = groups.find((g: any) => g.id === selectedChat.id);
+    return group?.createdBy === currentUser.username;
+  };
+
+  const addMemberToGroup = (username: string) => {
+    const groups = JSON.parse(localStorage.getItem("chatAppGroups") || "[]");
+    const updatedGroups = groups.map((group: any) => {
+      if (group.id === selectedChat?.id && !group.members.includes(username)) {
+        return {
+          ...group,
+          members: [...group.members, username],
+          lastMessage: {
+            sender: "System",
+            content: `${username} was added to the group`,
+            timestamp: new Date().toISOString()
+          }
+        };
+      }
+      return group;
+    });
+    localStorage.setItem("chatAppGroups", JSON.stringify(updatedGroups));
+    loadMessages();
+  };
+
+  const removeMemberFromGroup = (username: string) => {
+    const groups = JSON.parse(localStorage.getItem("chatAppGroups") || "[]");
+    const updatedGroups = groups.map((group: any) => {
+      if (group.id === selectedChat?.id) {
+        return {
+          ...group,
+          members: group.members.filter((m: string) => m !== username),
+          lastMessage: {
+            sender: "System",
+            content: `${username} was removed from the group`,
+            timestamp: new Date().toISOString()
+          }
+        };
+      }
+      return group;
+    });
+    localStorage.setItem("chatAppGroups", JSON.stringify(updatedGroups));
+    loadMessages();
+  };
+
   if (!selectedChat) {
     return (
       <div className="h-full flex flex-col items-center justify-center bg-gray-900 text-gray-400">
@@ -195,17 +263,76 @@ export const ChatView = ({ selectedChat, currentUser }: ChatViewProps) => {
 
   return (
     <div className="h-full flex flex-col bg-gray-900">
-      <div className="border-b border-gray-800 p-4 flex items-center">
-        <Avatar className="h-10 w-10 bg-purple-900 text-white">
-          <AvatarImage src="" alt={selectedChat.name} />
-          <AvatarFallback>{selectedChat.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-        </Avatar>
-        <div className="ml-3">
-          <h2 className="font-medium text-white">{selectedChat.name}</h2>
-          <p className="text-xs text-gray-400">
-            {selectedChat.type === "friend" ? "Online" : "Group chat"}
-          </p>
+      <div className="border-b border-gray-800 p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <button 
+              onClick={() => window.open(`/profile/${selectedChat?.type === "friend" ? selectedChat.id : ""}`)}
+              className="relative"
+            >
+              <Avatar className="h-10 w-10 bg-purple-900 text-white">
+                <AvatarImage src="" alt={selectedChat?.name} />
+                <AvatarFallback>{selectedChat?.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+              </Avatar>
+            </button>
+            <div className="ml-3">
+              <h2 className="font-medium text-white">{selectedChat?.name}</h2>
+              <p className="text-xs text-gray-400">
+                {selectedChat?.type === "friend" ? "Online" : "Group chat"}
+              </p>
+            </div>
+          </div>
+          
+          {selectedChat?.type === "group" && isGroupCreator() && (
+            <Button
+              variant="ghost"
+              onClick={() => setShowGroupSettings(!showGroupSettings)}
+              className="text-gray-400 hover:text-white"
+            >
+              <Settings size={20} />
+            </Button>
+          )}
         </div>
+        
+        {showGroupSettings && selectedChat?.type === "group" && isGroupCreator() && (
+          <div className="mt-4 p-4 bg-gray-800 rounded-lg">
+            <h3 className="text-sm font-medium text-white mb-2">Manage Members</h3>
+            <div className="space-y-2">
+              {availableFriends.map((friend) => (
+                <div key={friend.username} className="flex items-center justify-between">
+                  <span className="text-gray-300">{friend.displayName}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => addMemberToGroup(friend.username)}
+                    className="text-purple-400 hover:text-purple-300"
+                  >
+                    Add
+                  </Button>
+                </div>
+              ))}
+            </div>
+            
+            <h3 className="text-sm font-medium text-white mt-4 mb-2">Current Members</h3>
+            <div className="space-y-2">
+              {selectedChat.members?.map((member: string) => (
+                <div key={member} className="flex items-center justify-between">
+                  <span className="text-gray-300">{getUserDisplayName(member)}</span>
+                  {member !== currentUser.username && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeMemberFromGroup(member)}
+                      className="text-red-400 hover:text-red-300"
+                    >
+                      Remove
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">

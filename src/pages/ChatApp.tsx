@@ -165,14 +165,18 @@ const ChatApp = () => {
               currentUser={currentUser} 
             />
           )}
-          {activeTab === "friends" && currentUser && (
-            <FriendsList 
-              onSelectFriend={handleSelectFriend} 
-              currentUser={currentUser} 
+          {activeTab === "groups" && currentUser && (
+            <GroupsList 
+              onSelectGroup={handleSelectGroup}
+              currentUser={currentUser}
+              friends={userFriends}
             />
           )}
-          {activeTab === "notifications" && currentUser && (
-            <NotificationsView currentUser={currentUser} />
+          {activeTab === "settings" && currentUser && (
+            <SettingsMenu 
+              currentUser={currentUser}
+              onUpdateDisplayName={handleUpdateDisplayName}
+            />
           )}
         </div>
         

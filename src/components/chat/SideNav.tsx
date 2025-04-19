@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { MessageSquare, Users, Bell } from "lucide-react";
+import { Settings, Users, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type SideNavProps = {
@@ -10,8 +10,6 @@ type SideNavProps = {
 };
 
 export const SideNav = ({ activeTab, onChangeTab }: SideNavProps) => {
-  const [unreadNotifications] = useState(true); // You can make this dynamic based on actual notifications
-
   return (
     <div className="w-16 bg-gray-950 border-r border-gray-800 flex flex-col items-center py-4">
       <div className="mb-8">
@@ -35,33 +33,29 @@ export const SideNav = ({ activeTab, onChangeTab }: SideNavProps) => {
         </Button>
         
         <Button
-          variant={activeTab === "friends" ? "default" : "ghost"}
+          variant={activeTab === "groups" ? "default" : "ghost"}
           size="icon"
-          onClick={() => onChangeTab("friends")}
-          className={activeTab === "friends" 
+          onClick={() => onChangeTab("groups")}
+          className={activeTab === "groups" 
             ? "bg-purple-600 hover:bg-purple-700 text-white" 
             : "text-gray-500 hover:text-white hover:bg-gray-800"
           }
         >
           <Users size={20} />
-          <span className="sr-only">Friends</span>
+          <span className="sr-only">Groups</span>
         </Button>
         
         <Button
-          variant={activeTab === "notifications" ? "default" : "ghost"}
+          variant={activeTab === "settings" ? "default" : "ghost"}
           size="icon"
-          onClick={() => onChangeTab("notifications")}
-          className={`relative ${
-            activeTab === "notifications" 
-              ? "bg-purple-600 hover:bg-purple-700 text-white" 
-              : "text-gray-500 hover:text-white hover:bg-gray-800"
-          }`}
+          onClick={() => onChangeTab("settings")}
+          className={activeTab === "settings" 
+            ? "bg-purple-600 hover:bg-purple-700 text-white" 
+            : "text-gray-500 hover:text-white hover:bg-gray-800"
+          }
         >
-          <Bell size={20} />
-          {unreadNotifications && (
-            <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full" />
-          )}
-          <span className="sr-only">Notifications</span>
+          <Settings size={20} />
+          <span className="sr-only">Settings</span>
         </Button>
       </div>
     </div>
