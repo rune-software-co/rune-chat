@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from "react";
 import { Image, PaperclipIcon, Send, Smile, User, Users, X, Settings } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -198,6 +197,12 @@ export const ChatView = ({ selectedChat, currentUser, onSelectProfile }: ChatVie
     return user ? user.displayName : username;
   };
 
+  const getUserAvatar = (username: string) => {
+    const users = JSON.parse(localStorage.getItem("chatAppUsers") || "[]");
+    const user = users.find((u: any) => u.username === username);
+    return user?.avatarUrl || "";
+  };
+
   const isGroupCreator = () => {
     if (!selectedChat || selectedChat.type !== "group") return false;
     const groups = JSON.parse(localStorage.getItem("chatAppGroups") || "[]");
@@ -368,6 +373,7 @@ export const ChatView = ({ selectedChat, currentUser, onSelectProfile }: ChatVie
                     handleProfileClick(selectedChat.id) : 
                     handleProfileClick(message.sender)}
                 >
+                  <AvatarImage src={getUserAvatar(message.sender)} />
                   <AvatarFallback>{getUserDisplayName(message.sender)[0]}</AvatarFallback>
                 </Avatar>
               )}
@@ -396,6 +402,7 @@ export const ChatView = ({ selectedChat, currentUser, onSelectProfile }: ChatVie
               
               {message.isCurrentUser && (
                 <Avatar className="h-8 w-8 ml-2 bg-purple-900 text-white">
+                  <AvatarImage src={getUserAvatar(currentUser.username)} />
                   <AvatarFallback>You</AvatarFallback>
                 </Avatar>
               )}

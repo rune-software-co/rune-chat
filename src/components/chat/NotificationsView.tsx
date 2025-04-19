@@ -1,7 +1,8 @@
 
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "sonner";
 
 type Notification = {
   id: string;
@@ -10,14 +11,20 @@ type Notification = {
   content: string;
   timestamp: string;
   groupName?: string;
+  senderAvatar?: string;
 };
 
 export const NotificationsView = ({ currentUser }: { currentUser: { username: string } }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
+  const loadUserAvatar = (username: string) => {
+    const users = JSON.parse(localStorage.getItem("chatAppUsers") || "[]");
+    const user = users.find((u: any) => u.username === username);
+    return user?.avatarUrl || "";
+  };
+
   useEffect(() => {
     const loadNotifications = () => {
-      // Load direct messages
       const messages = JSON.parse(localStorage.getItem("chatAppMessages") || "[]");
       const messageNotifications = messages
         .filter((msg: any) => msg.receiverId === currentUser.username)
@@ -26,23 +33,23 @@ export const NotificationsView = ({ currentUser }: { currentUser: { username: st
           type: 'message',
           sender: msg.sender,
           content: msg.content || 'Sent an image',
-          timestamp: msg.timestamp
+          timestamp: msg.timestamp,
+          senderAvatar: loadUserAvatar(msg.sender)
         }));
 
-      // Load group additions
       const groups = JSON.parse(localStorage.getItem("chatAppGroups") || "[]");
       const groupNotifications = groups
-        .filter((group: any) => group.members.includes(currentUser.username))
+        .filter((group: any) => group.members?.includes(currentUser.username))
         .map((group: any) => ({
           id: `group-${group.id}`,
           type: 'group',
           sender: group.creator,
           content: 'Added you to group',
           timestamp: group.createdAt,
-          groupName: group.name
+          groupName: group.name,
+          senderAvatar: loadUserAvatar(group.creator)
         }));
 
-      // Combine and sort by timestamp
       const allNotifications = [...messageNotifications, ...groupNotifications]
         .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
@@ -50,6 +57,9 @@ export const NotificationsView = ({ currentUser }: { currentUser: { username: st
     };
 
     loadNotifications();
+    const interval = setInterval(loadNotifications, 5000); // Refresh every 5 seconds
+
+    return () => clearInterval(interval);
   }, [currentUser.username]);
 
   const formatTime = (timestamp: string) => {
@@ -64,6 +74,11 @@ export const NotificationsView = ({ currentUser }: { currentUser: { username: st
     );
   }
 
+  const markAsRead = (notificationId: string) => {
+    // You could implement a read status system here
+    toast.success("Notification marked as read");
+  };
+
   return (
     <div className="h-full bg-gray-900 overflow-y-auto">
       <div className="p-4">
@@ -72,9 +87,11 @@ export const NotificationsView = ({ currentUser }: { currentUser: { username: st
           {notifications.map((notification) => (
             <div
               key={notification.id}
-              className="bg-gray-800 rounded-lg p-4 flex items-start gap-3"
+              className="bg-gray-800 rounded-lg p-4 flex items-start gap-3 hover:bg-gray-750 transition-colors cursor-pointer"
+              onClick={() => markAsRead(notification.id)}
             >
               <Avatar className="h-10 w-10">
+                <AvatarImage src={notification.senderAvatar} />
                 <AvatarFallback className="bg-purple-900">
                   {notification.sender[0].toUpperCase()}
                 </AvatarFallback>

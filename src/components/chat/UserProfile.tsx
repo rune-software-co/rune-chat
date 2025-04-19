@@ -56,6 +56,15 @@ export const UserProfile = ({ username, currentUser }: UserProfileProps) => {
         const imageUrl = e.target?.result as string;
         if (type === 'avatar') {
           setAvatarUrl(imageUrl);
+          // Save to localStorage immediately for avatar
+          const users = JSON.parse(localStorage.getItem("chatAppUsers") || "[]");
+          const updatedUsers = users.map((user: any) => {
+            if (user.username === username) {
+              return { ...user, avatarUrl: imageUrl };
+            }
+            return user;
+          });
+          localStorage.setItem("chatAppUsers", JSON.stringify(updatedUsers));
         } else {
           setBannerUrl(imageUrl);
         }
