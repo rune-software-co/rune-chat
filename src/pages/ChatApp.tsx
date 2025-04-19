@@ -6,10 +6,8 @@ import { ChatView } from "@/components/chat/ChatView";
 import { AuthModal } from "@/components/chat/AuthModal";
 import { SideNav } from "@/components/chat/SideNav";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
 import { SettingsMenu } from "@/components/chat/SettingsMenu";
 import { UserProfile } from "@/components/chat/UserProfile";
-import { NotificationsView } from "@/components/chat/NotificationsView";
 
 type User = {
   username: string;
@@ -30,6 +28,7 @@ const ChatApp = () => {
   const [activeTab, setActiveTab] = useState("friends");
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [userFriends, setUserFriends] = useState<any[]>([]);
+  const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
 
   useEffect(() => {
     if (!localStorage.getItem("chatAppUsers")) {
@@ -114,6 +113,12 @@ const ChatApp = () => {
       name: friend.name,
       type: "friend"
     });
+    setSelectedProfile(null);
+  };
+
+  const handleSelectProfile = (username: string) => {
+    setSelectedChat(null);
+    setSelectedProfile(username);
   };
 
   const handleSelectGroup = (group: any) => {
@@ -150,7 +155,11 @@ const ChatApp = () => {
 
   return (
     <div className="h-screen flex flex-col bg-gray-900">
-      <Navbar currentUser={currentUser} onLogout={handleLogout} />
+      <Navbar 
+        currentUser={currentUser} 
+        onLogout={handleLogout} 
+        onChangeTab={handleTabChange}
+      />
       
       <div className="flex-1 flex overflow-hidden">
         <SideNav
@@ -163,7 +172,8 @@ const ChatApp = () => {
           {activeTab === "direct" && currentUser && (
             <FriendsList 
               onSelectFriend={handleSelectFriend} 
-              currentUser={currentUser} 
+              currentUser={currentUser}
+              onSelectProfile={handleSelectProfile}
             />
           )}
           {activeTab === "groups" && currentUser && (
@@ -185,7 +195,13 @@ const ChatApp = () => {
           {selectedChat ? (
             <ChatView 
               selectedChat={selectedChat} 
-              currentUser={currentUser} 
+              currentUser={currentUser}
+              onSelectProfile={handleSelectProfile} 
+            />
+          ) : selectedProfile ? (
+            <UserProfile 
+              username={selectedProfile} 
+              currentUser={currentUser?.username === selectedProfile}
             />
           ) : (
             currentUser && <UserProfile 

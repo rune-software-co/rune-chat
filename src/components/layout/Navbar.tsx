@@ -11,13 +11,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { NotificationsView } from "@/components/chat/NotificationsView";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 type NavbarProps = {
   currentUser: { username: string; displayName: string } | null;
   onLogout: () => void;
+  onChangeTab: (tab: string) => void;
 };
 
-export const Navbar = ({ currentUser, onLogout }: NavbarProps) => {
+export const Navbar = ({ currentUser, onLogout, onChangeTab }: NavbarProps) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   if (!currentUser) return null;
@@ -29,7 +38,7 @@ export const Navbar = ({ currentUser, onLogout }: NavbarProps) => {
           <div className="flex items-center gap-2 flex-1 md:max-w-md">
             <Input
               type="text"
-              placeholder="Search for friends, groups or messages..."
+              placeholder="Search for messages..."
               className="bg-gray-800 border-gray-700 text-gray-200 placeholder:text-gray-500 focus-visible:ring-purple-500"
               autoFocus
             />
@@ -50,10 +59,20 @@ export const Navbar = ({ currentUser, onLogout }: NavbarProps) => {
         )}
       </div>
       <div className="flex items-center gap-4">
-        <button className="p-2 rounded-lg hover:bg-gray-800 text-gray-400 relative">
-          <Bell size={20} />
-          <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-purple-500"></span>
-        </button>
+        <Sheet>
+          <SheetTrigger asChild>
+            <button className="p-2 rounded-lg hover:bg-gray-800 text-gray-400 relative">
+              <Bell size={20} />
+              <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-purple-500"></span>
+            </button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-[400px] bg-gray-900 border-gray-800 p-0">
+            <SheetHeader className="p-4 border-b border-gray-800">
+              <SheetTitle className="text-white">Notifications</SheetTitle>
+            </SheetHeader>
+            <NotificationsView currentUser={currentUser} />
+          </SheetContent>
+        </Sheet>
         
         <DropdownMenu>
           <DropdownMenuTrigger className="focus:outline-none">
@@ -70,7 +89,10 @@ export const Navbar = ({ currentUser, onLogout }: NavbarProps) => {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator className="bg-gray-700" />
-            <DropdownMenuItem className="cursor-pointer hover:bg-gray-700 focus:bg-gray-700">
+            <DropdownMenuItem 
+              className="cursor-pointer hover:bg-gray-700 focus:bg-gray-700"
+              onClick={() => onChangeTab("settings")}
+            >
               <Settings className="mr-2 h-4 w-4" />
               <span>Settings</span>
             </DropdownMenuItem>
