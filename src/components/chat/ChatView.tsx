@@ -17,7 +17,7 @@ type Message = {
 };
 
 type ChatViewProps = {
-  selectedChat: { id: string; name: string; type: "friend" | "group" } | null;
+  selectedChat: { id: string; name: string; type: "friend" | "group"; members?: string[] } | null;
   currentUser: { username: string; displayName: string };
 };
 
@@ -243,6 +243,34 @@ export const ChatView = ({ selectedChat, currentUser }: ChatViewProps) => {
     loadMessages();
   };
 
+  const handleProfileClick = (username: string) => {
+    window.open(`/profile/${username}`, '_blank');
+  };
+
+  const renderMembersList = () => {
+    if (!selectedChat?.members) return null;
+    
+    return (
+      <div className="space-y-2">
+        {selectedChat.members.map((member: string) => (
+          <div key={member} className="flex items-center justify-between">
+            <span className="text-gray-300">{getUserDisplayName(member)}</span>
+            {member !== currentUser.username && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => removeMemberFromGroup(member)}
+                className="text-red-400 hover:text-red-300"
+              >
+                Remove
+              </Button>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   if (!selectedChat) {
     return (
       <div className="h-full flex flex-col items-center justify-center bg-gray-900 text-gray-400">
@@ -266,15 +294,13 @@ export const ChatView = ({ selectedChat, currentUser }: ChatViewProps) => {
       <div className="border-b border-gray-800 p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <button 
-              onClick={() => window.open(`/profile/${selectedChat?.type === "friend" ? selectedChat.id : ""}`)}
-              className="relative"
+            <Avatar 
+              className="h-10 w-10 bg-purple-900 text-white cursor-pointer"
+              onClick={() => selectedChat.type === "friend" ? handleProfileClick(selectedChat.id) : null}
             >
-              <Avatar className="h-10 w-10 bg-purple-900 text-white">
-                <AvatarImage src="" alt={selectedChat?.name} />
-                <AvatarFallback>{selectedChat?.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-              </Avatar>
-            </button>
+              <AvatarImage src="" alt={selectedChat?.name} />
+              <AvatarFallback>{selectedChat?.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+            </Avatar>
             <div className="ml-3">
               <h2 className="font-medium text-white">{selectedChat?.name}</h2>
               <p className="text-xs text-gray-400">
@@ -314,23 +340,7 @@ export const ChatView = ({ selectedChat, currentUser }: ChatViewProps) => {
             </div>
             
             <h3 className="text-sm font-medium text-white mt-4 mb-2">Current Members</h3>
-            <div className="space-y-2">
-              {selectedChat.members?.map((member: string) => (
-                <div key={member} className="flex items-center justify-between">
-                  <span className="text-gray-300">{getUserDisplayName(member)}</span>
-                  {member !== currentUser.username && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeMemberFromGroup(member)}
-                      className="text-red-400 hover:text-red-300"
-                    >
-                      Remove
-                    </Button>
-                  )}
-                </div>
-              ))}
-            </div>
+            {renderMembersList()}
           </div>
         )}
       </div>
@@ -350,7 +360,12 @@ export const ChatView = ({ selectedChat, currentUser }: ChatViewProps) => {
               className={`flex ${message.isCurrentUser ? 'justify-end' : 'justify-start'} mb-4`}
             >
               {!message.isCurrentUser && (
-                <Avatar className="h-8 w-8 mr-2 bg-purple-900 text-white">
+                <Avatar 
+                  className="h-8 w-8 mr-2 bg-purple-900 text-white cursor-pointer"
+                  onClick={() => selectedChat.type === "friend" ? 
+                    handleProfileClick(selectedChat.id) : 
+                    handleProfileClick(message.sender)}
+                >
                   <AvatarFallback>{getUserDisplayName(message.sender)[0]}</AvatarFallback>
                 </Avatar>
               )}

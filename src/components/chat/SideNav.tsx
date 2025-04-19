@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Settings, Users, MessageSquare, Menu } from "lucide-react";
+import { Settings, Users, MessageSquare, Menu, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type SideNavProps = {
@@ -16,8 +16,24 @@ export const SideNav = ({ activeTab, onChangeTab }: SideNavProps) => {
     setIsCollapsed(!isCollapsed);
   };
 
+  if (isCollapsed) {
+    return (
+      <div className="w-10 flex flex-col items-center py-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleSidebar}
+          className="text-gray-500 hover:text-white hover:bg-gray-800"
+        >
+          <ChevronRight size={20} />
+          <span className="sr-only">Expand Sidebar</span>
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <div className={`${isCollapsed ? 'w-12' : 'w-16'} bg-gray-950 border-r border-gray-800 flex flex-col items-center py-4 transition-all duration-300`}>
+    <div className="w-16 bg-gray-950 border-r border-gray-800 flex flex-col items-center py-4 transition-all duration-300">
       <div className="mb-8 flex flex-col items-center">
         <Button
           variant="ghost"
@@ -28,11 +44,9 @@ export const SideNav = ({ activeTab, onChangeTab }: SideNavProps) => {
           <Menu size={20} />
           <span className="sr-only">Toggle Sidebar</span>
         </Button>
-        {!isCollapsed && (
-          <div className="text-xs text-purple-500 font-semibold whitespace-nowrap">
-            RuneChat
-          </div>
-        )}
+        <div className="text-xs text-purple-500 font-semibold whitespace-nowrap">
+          RuneChat
+        </div>
       </div>
       
       <div className="flex-1 flex flex-col items-center gap-2">
@@ -78,4 +92,3 @@ export const SideNav = ({ activeTab, onChangeTab }: SideNavProps) => {
     </div>
   );
 };
-
