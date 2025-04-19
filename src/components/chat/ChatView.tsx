@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { Image, PaperclipIcon, Send, Smile, User, Users, X, Settings } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -19,9 +20,10 @@ type Message = {
 type ChatViewProps = {
   selectedChat: { id: string; name: string; type: "friend" | "group"; members?: string[] } | null;
   currentUser: { username: string; displayName: string };
+  onSelectProfile: (username: string) => void;
 };
 
-export const ChatView = ({ selectedChat, currentUser }: ChatViewProps) => {
+export const ChatView = ({ selectedChat, currentUser, onSelectProfile }: ChatViewProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -244,7 +246,7 @@ export const ChatView = ({ selectedChat, currentUser }: ChatViewProps) => {
   };
 
   const handleProfileClick = (username: string) => {
-    window.open(`/profile/${username}`, '_blank');
+    onSelectProfile(username);
   };
 
   const renderMembersList = () => {

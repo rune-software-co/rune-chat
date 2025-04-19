@@ -1,4 +1,6 @@
+
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
 import { FriendsList } from "@/components/chat/FriendsList";
 import { GroupsList } from "@/components/chat/GroupsList";
@@ -195,7 +197,7 @@ const ChatApp = () => {
           {selectedChat ? (
             <ChatView 
               selectedChat={selectedChat} 
-              currentUser={currentUser}
+              currentUser={currentUser!}
               onSelectProfile={handleSelectProfile} 
             />
           ) : selectedProfile ? (

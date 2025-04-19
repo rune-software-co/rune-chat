@@ -19,9 +19,10 @@ type Friend = {
 type FriendsListProps = {
   onSelectFriend: (friend: any) => void;
   currentUser: { username: string; displayName: string };
+  onSelectProfile: (username: string) => void;
 };
 
-export const FriendsList = ({ onSelectFriend, currentUser }: FriendsListProps) => {
+export const FriendsList = ({ onSelectFriend, currentUser, onSelectProfile }: FriendsListProps) => {
   const [friends, setFriends] = useState<Friend[]>([]);
   const [friendRequests, setFriendRequests] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -295,7 +296,13 @@ export const FriendsList = ({ onSelectFriend, currentUser }: FriendsListProps) =
                     onClick={() => onSelectFriend(friend)}
                   >
                     <div className="relative">
-                      <Avatar className="h-9 w-9 bg-purple-900 text-white">
+                      <Avatar 
+                        className="h-9 w-9 bg-purple-900 text-white cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectProfile(friend.username);
+                        }}
+                      >
                         <AvatarImage src={friend.avatar || ""} alt={friend.name} />
                         <AvatarFallback>{friend.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
                       </Avatar>
