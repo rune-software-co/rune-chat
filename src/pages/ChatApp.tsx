@@ -20,6 +20,7 @@ type Chat = {
   id: string;
   name: string;
   type: "friend" | "group";
+  members?: string[]; // Add this for group type chats
 };
 
 const ChatApp = () => {
